@@ -2,14 +2,24 @@ This is a portable music tracker built for CircuitPython devices, specifically t
 
 The project is still in the very early stages of development and will change when new APIs become available, but so far it looks quite possible.
 
+Includes the waveform generator files from the Adafruit Learning System.
+
 Milestones:
 TO DO
 
 [] wave mixing
+
 [] draw triangle waveshape
+
 [] draw noise waves
+
 [] algorithm for frequency mapping so that it reads out in Hz
+
 [] move cursor, navigation
+
 [] impliment pages as displayio groups
+
 [] envelope (ADSR)
+
 [] tempo control, should be (1/BPM/60) seconds for each step 
+
