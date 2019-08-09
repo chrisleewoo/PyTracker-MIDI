@@ -21,6 +21,8 @@ from adafruit_bus_device.i2c_device import I2CDevice
 from gamepadshift import GamePadShift
 from micropython import const
 from analogio import AnalogOut
+from lib import Generator
+import shapes
 
 # Button Constants
 BUTTON_LEFT = const(128)
@@ -46,64 +48,146 @@ chan2 = [0]*6
 chan3 = [0]*6
 chan4 = [0]*6
 
+def length(frequency):
+    return int(32000 / frequency)
+
+
+
+class Generator:
+
+    sample = None
+    dac = None
+    shape = None
+    frequency = None
+
+
+    def __init__(self):
+        self.dac = audioio.AudioOut(board.A0)
+
+
+    def reallocate(self, frequency):
+        self.sample = array.array("h", [0] * length(frequency))
+
+
+    def make_sine(self, volume):
+        l = len(self.sample)
+        for i in range(l):
+            self.sample[i] = min(2 ** volume - 1, int(math.sin(math.pi * 2 * i / l) * (2 ** volume)))
+
+
+    def make_square(self):
+        l = len(self.sample)
+        half_l = l // 2
+        for i in range(l):
+            if i < half_l:
+                self.sample[i] = -1 * ((2 ** 15) - 1)
+            else:
+                self.sample[i] = (2 ** 15) - 1
+
+
+    def make_triangle(self):
+        l = len(self.sample)
+        half_l = l // 2
+        s = 0
+        for i in range(l):
+            if i <= half_l:
+                s = int((i / half_l) * (2 ** 16)) - (2 ** 15)
+            else:
+                s = int((1 - ((i - half_l) / half_l)) * (2 ** 16)) - (2 ** 15)
+            self.sample[i] = min(2 ** 15 -1, s)
+
+
+
+    def make_sawtooth(self):
+        l = len(self.sample)
+        for i in range(l):
+            self.sample[i] = int((i / l) * (2 ** 16)) - (2 ** 15)
+
+
+    def update(self, shape, frequency, volume):
+        if shape == self.shape and frequency == self.frequency:
+            return
+
+        if frequency != self.frequency:
+            self.reallocate(frequency)
+            self.frequency = frequency
+
+        self.shape = shape
+        if shape == shapes.SINE:
+            self.make_sine(volume)
+        elif shape == shapes.SQUARE:
+            self.make_square()
+        elif shape == shapes.TRIANGLE:
+            self.make_triangle()
+        elif shape == shapes.SAWTOOTH:
+            self.make_sawtooth()
+
+        #self.dac.stop()
+        #self.dac.play(audioio.RawSample(self.sample, channel_count=1, sample_rate=64000), loop=True)
+
+
+generator = Generator()
+delta = 0                             # how much to change the frequency by
+shape = shapes.SINE                          # the active waveform
+frequency = 110                       # the current frequency
+volume = 12                     #0 -15
+
+
+for x in range(20000):
+    generator.update(shape, frequency, volume)
+
+print(generator.sample)
+
+##need to add volume for all waves
+
+
+
+
+
+
+
+
+
 
 def customwait(wait_time):
         start = time.monotonic()
         while time.monotonic() < (start + wait_time):
             pass
 
-def wave_out(freq, vol, wave,length, ticks, duty_cycle):
-    #freq is how many steps to take
-    #volume is 0-10 mapped to 0-65535
-    if wave == 'saw':
-            wave_array = array.array("H")
-            for t in range (length):
-                for i in range(0, vol, freq):
-                    wave_array.append(i)
-            return wave_array
-
-    if wave == 'sqr':
-	# will change to pulse duty cyc later
-            wave_array = array.array("H")
-            for t in range (length):
-                for i in range(0, vol, freq):
-                    if i < (freq*duty_cycle) :
-                        wave_array.append(int(vol))
-                    else:
-                        wave_array.append(0)
-            return wave_array
-    if wave == 'tri':
-            wave_array = array.array("H")
-            for t in range (length):
-                for x in range (0, vol, freq/2):
-                    wave_array.append(x)
-                for y in range (0, vol, freq/2):
-                    wave_array.append(vol - y)
-            return wave_array
-analog_out = AnalogOut(board.A0)
 
 def sound_player(chan1, chan2, chan3, chan4, ticks):
     #need to add arrays
-        mixer_wave = array.array("H", [0] * ticks)
+        mixer_wave = array.array("H", [0] * length(ticks) )
         buffer_bytes = wave_out(chan1[0], chan1[1], chan1[2], chan1[3], chan1[4], chan1[5])
         #then mod by volume setting
 		#then send to AudioOut
-
+        real_freq = chan1[0]
+        print(real_freq)
         for x in range (len(buffer_bytes)):
             analog_out.value = buffer_bytes[x]
+            time.sleep(real_freq)
 
 
 print("playing")
-#wave_out(64,16384,'saw',24)
-chan1 = [32, 16384, 'saw', 48, 48, .5]
-chan2 = [32, 16384, 'sqr', 24, 48, .5]
+#       freq, vol,  wave,   length,    ticks,   duty_cycle
+
 ticks = chan1[4]
-sound_player(chan1, chan2, chan3, chan4, ticks)
 
 
-sound_player(chan2, chan2, chan3, chan4, ticks)
+chan1 = [110,   2,   'sqr',   10000,   100,      .5]
+chan2 = [110, 2, 'sqr', 10000, 100, .5]
+chan3 = [110, 2, 'sqr', 10000, 100, .75]
+#sound_player(chan1, chan2, chan3, chan4, ticks)
+#sound_player(chan2, chan2, chan3, chan4, ticks)
+#sound_player(chan3, chan2, chan3, chan4, ticks)
 
-#wave_out(128,16384,'sqr',24)
+chan1 = [110,   2,   'sqr',   10000,   100,      .5]
+chan2 = [110, 2, 'sqr', 10000, 100, .5]
+chan3 = [110, 2, 'sqr', 10000, 100, .75]
+#sound_player(chan1, chan2, chan3, chan4, ticks)
+#sound_player(chan2, chan2, chan3, chan4, ticks)
+#sound_player(chan3, chan2, chan3, chan4, ticks)
+
 
 print("stopped")
 speaker_enable.value = False
