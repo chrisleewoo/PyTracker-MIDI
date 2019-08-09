@@ -11,6 +11,7 @@ import neopixel
 import displayio
 import simpleio
 import terminalio
+import audioio
 from adafruit_display_shapes.rect import Rect
 from adafruit_display_shapes.circle import Circle
 from adafruit_display_shapes.roundrect import RoundRect
@@ -36,16 +37,14 @@ pad = GamePadShift(digitalio.DigitalInOut(board.BUTTON_CLOCK),
                    digitalio.DigitalInOut(board.BUTTON_LATCH))
 
 
-analog_out = AnalogOut(board.A0)
-
 speaker_enable = digitalio.DigitalInOut(board.SPEAKER_ENABLE)
 speaker_enable.direction = digitalio.Direction.OUTPUT
 speaker_enable.value = True
 
-chan1 = [0]*4   #freq, vol, wave,length
-chan2 = [0]*4
-chan3 = [0]*4
-chan4 = [0]*4
+chan1 = [0]*6   #freq, vol, wave, length, ticks, duty_cycle
+chan2 = [0]*6
+chan3 = [0]*6
+chan4 = [0]*6
 
 
 def customwait(wait_time):
@@ -53,43 +52,56 @@ def customwait(wait_time):
         while time.monotonic() < (start + wait_time):
             pass
 
-def wave_out(freq, vol, wave,length):
+def wave_out(freq, vol, wave,length, ticks, duty_cycle):
     #freq is how many steps to take
     #volume is 0-10 mapped to 0-65535
     if wave == 'saw':
-        for t in range (length):
-            for i in range(0, vol, freq):
-                analog_out.value = i
+            wave_array = array.array("H")
+            for t in range (length):
+                for i in range(0, vol, freq):
+                    wave_array.append(i)
+            return wave_array
+
     if wave == 'sqr':
-        for t in range (length):
-            for i in range(0, vol, freq):
-                if i < (vol/2) :
-                    analog_out.value = vol
-                else:
-                    analog_out.value = 0
+	# will change to pulse duty cyc later
+            wave_array = array.array("H")
+            for t in range (length):
+                for i in range(0, vol, freq):
+                    if i < (freq*duty_cycle) :
+                        wave_array.append(int(vol))
+                    else:
+                        wave_array.append(0)
+            return wave_array
     if wave == 'tri':
-        #count up, then down
-        pass
+            wave_array = array.array("H")
+            for t in range (length):
+                for x in range (0, vol, freq/2):
+                    wave_array.append(x)
+                for y in range (0, vol, freq/2):
+                    wave_array.append(vol - y)
+            return wave_array
+analog_out = AnalogOut(board.A0)
 
-def wave_arrayer(freq, vol, wavetype, channel):
-	if wavetype == 'saw':
-		pass
-	if wavetype == 'sqr':
-		pass
-	if wavetype == 'tri':
-		pass
-
-def wave_mixed(chan1, chan2, chan3, chan4):
+def sound_player(chan1, chan2, chan3, chan4, ticks):
     #need to add arrays
-	mixer_wave = wave_out(chan1[0], chan1[1], chan1[2], chan1[3])
-        + wave_out(chan2[0], chan2[1], chan2[2], chan2[3])
-        + wave_out(chan3[0], chan3[1], chan3[2], chan3[3])
-        + wave_out(chan4[0], chan4[1], chan4[2], chan4[3])
+        mixer_wave = array.array("H", [0] * ticks)
+        buffer_bytes = wave_out(chan1[0], chan1[1], chan1[2], chan1[3], chan1[4], chan1[5])
         #then mod by volume setting
+		#then send to AudioOut
+
+        for x in range (len(buffer_bytes)):
+            analog_out.value = buffer_bytes[x]
 
 
 print("playing")
 #wave_out(64,16384,'saw',24)
+chan1 = [32, 16384, 'saw', 48, 48, .5]
+chan2 = [32, 16384, 'sqr', 24, 48, .5]
+ticks = chan1[4]
+sound_player(chan1, chan2, chan3, chan4, ticks)
+
+
+sound_player(chan2, chan2, chan3, chan4, ticks)
 
 #wave_out(128,16384,'sqr',24)
 
