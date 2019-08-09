@@ -9,11 +9,7 @@ TO DO
 
 [] wave mixing
 
-[] draw triangle waveshape
-
 [] draw noise waves
-
-[] algorithm for frequency mapping so that it reads out in Hz
 
 [] move cursor, navigation
 
