@@ -2,7 +2,9 @@ This is a portable music tracker built for CircuitPython devices, specifically t
 
 The project is still in the very early stages of development and will change when new APIs become available, but so far it looks quite possible.
 
-Includes the waveform generator files from the Adafruit Learning System.
+Includes the waveform generator files from the Adafruit Learning System, with just minor tweaks.
+
+Make sure that generator.py and shapes.py are in the lib folder on the CIRCUITPY root directory.
 
 Milestones:
 TO DO
@@ -13,9 +15,11 @@ TO DO
 
 [] move cursor, navigation
 
-[] impliment pages as displayio groups
+[] impliment pages as displayio groups?
 
 [] envelope (ADSR)
 
 [] tempo control, should be (1/BPM/60) seconds for each step 
+
+[] save/load songs
 
