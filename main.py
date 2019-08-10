@@ -21,8 +21,9 @@ from adafruit_bus_device.i2c_device import I2CDevice
 from gamepadshift import GamePadShift
 from micropython import const
 from analogio import AnalogOut
-from lib import Generator
+from generator import Generator
 import shapes
+import pitches
 
 # Button Constants
 BUTTON_LEFT = const(128)
@@ -52,80 +53,6 @@ def length(frequency):
     return int(32000 / frequency)
 
 
-
-class Generator:
-
-    sample = None
-    dac = None
-    shape = None
-    frequency = None
-
-
-    def __init__(self):
-        self.dac = audioio.AudioOut(board.A0)
-
-
-    def reallocate(self, frequency):
-        self.sample = array.array("h", [0] * length(frequency))
-
-
-    def make_sine(self, volume):
-        l = len(self.sample)
-        for i in range(l):
-            self.sample[i] = min(2 ** volume - 1, int(math.sin(math.pi * 2 * i / l) * (2 ** volume)))
-
-
-    def make_square(self):
-        l = len(self.sample)
-        half_l = l // 2
-        for i in range(l):
-            if i < half_l:
-                self.sample[i] = -1 * ((2 ** 15) - 1)
-            else:
-                self.sample[i] = (2 ** 15) - 1
-
-
-    def make_triangle(self):
-        l = len(self.sample)
-        half_l = l // 2
-        s = 0
-        for i in range(l):
-            if i <= half_l:
-                s = int((i / half_l) * (2 ** 16)) - (2 ** 15)
-            else:
-                s = int((1 - ((i - half_l) / half_l)) * (2 ** 16)) - (2 ** 15)
-            self.sample[i] = min(2 ** 15 -1, s)
-
-
-
-    def make_sawtooth(self):
-        l = len(self.sample)
-        for i in range(l):
-            self.sample[i] = int((i / l) * (2 ** 16)) - (2 ** 15)
-
-
-    def update(self, shape, frequency, volume):
-        if shape == self.shape and frequency == self.frequency:
-            return
-
-        if frequency != self.frequency:
-            self.reallocate(frequency)
-            self.frequency = frequency
-
-        self.shape = shape
-        if shape == shapes.SINE:
-            self.make_sine(volume)
-        elif shape == shapes.SQUARE:
-            self.make_square()
-        elif shape == shapes.TRIANGLE:
-            self.make_triangle()
-        elif shape == shapes.SAWTOOTH:
-            self.make_sawtooth()
-
-        #self.dac.stop()
-        #self.dac.play(audioio.RawSample(self.sample, channel_count=1, sample_rate=64000), loop=True)
-
-
 generator = Generator()
 delta = 0                             # how much to change the frequency by
 shape = shapes.SINE                          # the active waveform
@@ -139,11 +66,6 @@ for x in range(20000):
 print(generator.sample)
 
 ##need to add volume for all waves
-
-
-
-
-
 
 
 
@@ -327,45 +249,8 @@ set_grid_disp('c 5',14)
 
 while True:
 
-
-    #print("sorry nothing...")
-    #pixels.fill(RED)
-    #pixels.show()
-    #time.sleep(.2)
-    #pixels.fill(YELLOW)
-    #pixels.show()
-    # Increase or decrease to change the speed of the solid color change.
-    #time.sleep(.2)
-    #pixels.fill(GREEN)
-    #pixels.show()
-    #time.sleep(.2)
-    #pixels.fill(CYAN)
-    #pixels.show()
-    #time.sleep(.2)
-    #pixels.fill(BLUE)
-    #pixels.show()
-    #time.sleep(.2)
-    #pixels.fill(PURPLE)
-    #pixels.show()
-    #time.sleep(.2)
-    #pixels.fill(OFF)
-    #pixels.show()
-    #time.sleep(10)
-    #for f in (262, 294, 330, 349, 392, 440, 494, 523):
-     #   simpleio.tone(board.A0, f, 1)
-    #time.sleep(1)
-
-    #color_chase(RED, .1)  # Increase the number to slow down the color chase
-    #color_chase(YELLOW, .1)
-    #color_chase(GREEN, .1)
-    #color_chase(CYAN, .1)
-    #color_chase(BLUE, .1)
-    #color_chase(PURPLE, .1)
-
-    #rainbow_cycle(.1)  # Increase the number to slow down the rainbow
     pixels.fill(OFF)
     pixels.show()
-    #time.sleep(10)
 
             # Reading buttons too fast returns 0
     if (last_read + 0.1) < time.monotonic():
@@ -373,8 +258,7 @@ while True:
         last_read = time.monotonic()
     if current_buttons != buttons:
         # Respond to the buttons
-        if (buttons == 0b00010100):
-
+        if (buttons == BUTTON_SEL + BUTTON_A): #
             customwait(.5)
         elif (buttons == 0b01000100):
             customwait(.5)

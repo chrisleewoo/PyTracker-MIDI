@@ -30,6 +30,7 @@ class Generator:
     dac = None
     shape = None
     frequency = None
+    volume = None
 
 
     def __init__(self):
@@ -40,13 +41,13 @@ class Generator:
         self.sample = array.array("h", [0] * length(frequency))
 
 
-    def make_sine(self):
+    def make_sine(self, volume):
         l = len(self.sample)
         for i in range(l):
-            self.sample[i] = min(2 ** 15 - 1, int(math.sin(math.pi * 2 * i / l) * (2 ** 15)))
+            self.sample[i] = min(2 ** volume - 1, int(math.sin(math.pi * 2 * i / l) * (2 ** volume)))
+    
 
-
-    def make_square(self):
+    def make_square(self, volume):
         l = len(self.sample)
         half_l = l // 2
         for i in range(l):
@@ -56,7 +57,7 @@ class Generator:
                 self.sample[i] = (2 ** 15) - 1
 
 
-    def make_triangle(self):
+    def make_triangle(self, volume):
         l = len(self.sample)
         half_l = l // 2
         s = 0
@@ -69,14 +70,14 @@ class Generator:
 
 
 
-    def make_sawtooth(self):
+    def make_sawtooth(self, volume):
         l = len(self.sample)
         for i in range(l):
             self.sample[i] = int((i / l) * (2 ** 16)) - (2 ** 15)
 
 
-    def update(self, shape, frequency):
-        if shape == self.shape and frequency == self.frequency:
+    def update(self, shape, frequency, volume):
+        if shape == self.shape and frequency == self.frequency and volume == self.volume:
             return
 
         if frequency != self.frequency:
@@ -85,13 +86,13 @@ class Generator:
 
         self.shape = shape
         if shape == shapes.SINE:
-            self.make_sine()
+            self.make_sine(volume)
         elif shape == shapes.SQUARE:
-            self.make_square()
+            self.make_square(volume)
         elif shape == shapes.TRIANGLE:
-            self.make_triangle()
+            self.make_triangle(volume)
         elif shape == shapes.SAWTOOTH:
-            self.make_sawtooth()
+            self.make_sawtooth(volume)
 
-        self.dac.stop()
-        self.dac.play(audioio.RawSample(self.sample, channel_count=1, sample_rate=64000), loop=True)
+        #self.dac.stop()
+        #self.dac.play(audioio.RawSample(self.sample, channel_count=1, sample_rate=64000), loop=True)
