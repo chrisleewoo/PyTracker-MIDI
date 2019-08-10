@@ -1,4 +1,13 @@
-# CircuitPython LSDJ
+'''
+CircuitPython DJ
+Inspired by LSDJ and nanoloop gameboy trackers
+Code snippets and libraries from the following Adafruit Learning Guides:
+    FruitBox Sequencer
+    PyBadge GamePad
+    Feather Waveform Generator in CircuitPython
+    Circuit Playground Express USB MIDI Controller and Synthesizer
+
+'''
 
 
 import time
@@ -63,11 +72,9 @@ volume = 12                     #0 -15
 for x in range(20000):
     generator.update(shape, frequency, volume)
 
-print(generator.sample)
 
-##need to add volume for all waves
-
-
+bpm = 120  # quarter note beats per minute
+ticks = 15 / bpm  # 16th note expressed as seconds
 
 
 

@@ -1,5 +1,5 @@
 """
-Outpout generator code for signal generator.
+Output generator code for signal generator.
 
 Adafruit invests time and resources providing this open source code.
 Please support Adafruit and open source hardware by purchasing
