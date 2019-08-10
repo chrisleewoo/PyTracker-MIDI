@@ -4,7 +4,7 @@ The project is still in the very early stages of development and will change whe
 
 Includes the waveform generator files from the Adafruit Learning System, with just minor tweaks.
 
-Make sure that generator.py and shapes.py are in the lib folder on the CIRCUITPY root directory.
+Make sure that generator.py, pitches.py, and shapes.py are in the lib folder on the CIRCUITPY root directory.
 
 Milestones:
 TO DO
