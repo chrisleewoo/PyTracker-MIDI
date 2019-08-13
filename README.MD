@@ -4,14 +4,14 @@ The project is still in the very early stages of development and will change whe
 
 Includes the waveform generator files from the Adafruit Learning System, with just minor tweaks.
 
-Make sure that generator.py, pitches.py, and shapes.py are in the lib folder on the CIRCUITPY root directory.
+Unfortunately, I could not get the 4 channels of waves to mix without overloading memory or outputting just a pop. This will be revisited if circuitpython gets a mixer implimented.
+
+For now, I will continue to make this as a midi controller and sequencer, which still proves to be quite fun to mess with! Adafruit has already provided what I need to get started, and the main(midi) works. Rename as main when uploading, the older one is on here for posterity.
 
 Milestones:
 TO DO
 
-[] wave mixing
-
-[] draw noise waves
+[] wave mixing (ON HOLD)
 
 [] move cursor, navigation
 
@@ -21,5 +21,5 @@ TO DO
 
 [] tempo control, should be (1/BPM/60) seconds for each step 
 
-[] save/load songs
+[] save/load songs (read and write to file)
 
