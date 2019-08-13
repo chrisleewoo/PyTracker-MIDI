@@ -216,6 +216,33 @@ def pixelocate_y(number):
         return 15 + 24*2
     else: return 15 + 24*3
 
+
+def selection_update(dir,current):
+    if dir == 'left':
+        if current % 4 != 0:     #0, 4, 8, 12
+            selection.x = selection.x - 24
+            current -= 1
+            return current
+        elif current == 0:
+            return current
+        else:
+            selection.x = selection.x + 24 * 3
+            selection.y = selection.y - 24
+            current -= 1
+            return current
+    if dir == 'right':
+        if current % 4 != 3:     #3, 7, 11, 15
+            selection.x = selection.x + 24
+            current += 1
+            return current
+        elif current == 15:
+            return current
+        else:
+            selection.x = selection.x - 24 * 3
+            selection.y = selection.y + 24
+            current += 1
+            return current
+
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
 GREEN = (0, 255, 0)
@@ -227,7 +254,7 @@ current_buttons = pad.get_pressed()
 last_read = 0
 
 for g in range(15):
-    g0 = label.Label(font, text="   ", color=0xff9Fff)
+    g0 = label.Label(font, text="   ", color=0xff9Fff)  #initialize text in each box
     mixgrid.append(g0)
 
 set_grid_disp('c#4',14)
@@ -237,6 +264,10 @@ time.sleep(.5)
 set_grid_disp('a 7',14)
 time.sleep(.1)
 set_grid_disp('c 5',14)
+
+selection = Rect( (52), (5), 24, 24, outline=0xFFAA00, stroke=3)
+mixgrid.append(selection)
+selected = 0
 
 while True:
 
@@ -258,7 +289,13 @@ while True:
             customwait(.5)
 
         elif (buttons & BUTTON_LEFT) > 0:
-            print('Left', buttons)
+            selected = selection_update('left', selected)
+            print('Left', selected)
+
+        elif (buttons & BUTTON_RIGHT) > 0:
+            selected = selection_update('right', selected)
+            print('Right', selected)
+
         elif (buttons & BUTTON_UP) > 0 :
             print('Up', buttons)
         elif (buttons & BUTTON_DOWN) > 0 :
@@ -273,8 +310,7 @@ while True:
         elif (buttons & BUTTON_SEL) > 0 :
             print('Select', buttons)
 
-        elif (buttons & BUTTON_RIGHT) > 0:
-            print('Right', buttons)
+
 
         current_buttons = buttons
 
