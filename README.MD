@@ -6,14 +6,16 @@ Includes the waveform generator files from the Adafruit Learning System, with ju
 
 Unfortunately, I could not get the 4 channels of waves to mix without overloading memory or outputting just a pop. This will be revisited if circuitpython gets a mixer implimented.
 
-For now, I will continue to make this as a midi controller and sequencer, which still proves to be quite fun to mess with! Adafruit has already provided what I need to get started, and the main(midi) works. Rename as main when uploading, the older one is on here for posterity.
+For now, I will continue to make this as a midi controller and sequencer, which still proves to be quite fun to mess with! Adafruit has already provided what I need to get started, and the main works. The older one is on here for posterity.
+
+Moving left and right are working, keeps you on the grid for easier navigation
 
 Milestones:
 TO DO
 
 [] wave mixing (ON HOLD)
 
-[] move cursor, navigation
+[] move cursor, menu navigation 
 
 [] impliment pages as displayio groups?
 
