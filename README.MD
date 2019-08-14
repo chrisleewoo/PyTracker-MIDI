@@ -8,10 +8,14 @@ Unfortunately, I could not get the 4 channels of waves to mix without overloadin
 
 For now, I will continue to make this as a midi controller and sequencer, which still proves to be quite fun to mess with! Adafruit has already provided what I need to get started, and the main works. The older one is on here for posterity.
 
-Moving left and right are working, keeps you on the grid for easier navigation
+Moving left and right are working, keeps you on the grid for easier navigation.
+
+Sequence displays as stepped according to BPM.
 
 Milestones:
 TO DO
+
+[] Match displayed sequence with midi note vals
 
 [] wave mixing (ON HOLD)
 
@@ -20,8 +24,6 @@ TO DO
 [] impliment pages as displayio groups?
 
 [] envelope (ADSR)
-
-[] tempo control, should be (1/BPM/60) seconds for each step 
 
 [] save/load songs (read and write to file)
 
