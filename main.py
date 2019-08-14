@@ -33,6 +33,7 @@ from analogio import AnalogOut
 from generator import Generator
 import shapes
 import pitches
+from notevals import display_note
 
 import usb_midi
 
@@ -87,6 +88,7 @@ midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1],
 bpm = 60  # quarter note beats per minute
 beat = 15 / bpm  # 16th note expressed as seconds, each beat is this long
 
+seq = [] * 16   #16 step sequence
 
 
 def customwait(wait_time):
@@ -94,15 +96,43 @@ def customwait(wait_time):
         while time.monotonic() < (start + wait_time):
             pass
 
+def sequencer(seq, beat, gridbeat):
+    beatstep = 0
+    #gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=3)
+
+    for x in range (16):
+        beatstep = selection_update('right',beatstep, gridbeat)
+        midi.send(NoteOn(seq[x], 127))
+        customwait(beat)
+        midi.send(NoteOn(seq[x], 0))
+
+def selection_update(dir,current, type):
+    if dir == 'left':
+        if current % 4 != 0:     #0, 4, 8, 12
+            type.x = type.x - 24
+            current -= 1
+            return current
+        elif current == 0:
+            return current
+        else:
+            type.x = type.x + 24 * 3
+            type.y = type.y - 24
+            current -= 1
+            return current
+    if dir == 'right':
+        if current % 4 != 3:     #3, 7, 11, 15
+            type.x = type.x + 24
+            current += 1
+            return current
+        elif current == 15:
+            return current
+        else:
+            type.x = type.x - 24 * 3
+            type.y = type.y + 24
+            current += 1
+            return current
 
 
-
-print("playing")
-midi.send(NoteOn(60, velocity))
-customwait(2)
-midi.send(NoteOn(60, 0))
-
-print("stopped")
 speaker_enable.value = False
 
 
@@ -217,31 +247,7 @@ def pixelocate_y(number):
     else: return 15 + 24*3
 
 
-def selection_update(dir,current):
-    if dir == 'left':
-        if current % 4 != 0:     #0, 4, 8, 12
-            selection.x = selection.x - 24
-            current -= 1
-            return current
-        elif current == 0:
-            return current
-        else:
-            selection.x = selection.x + 24 * 3
-            selection.y = selection.y - 24
-            current -= 1
-            return current
-    if dir == 'right':
-        if current % 4 != 3:     #3, 7, 11, 15
-            selection.x = selection.x + 24
-            current += 1
-            return current
-        elif current == 15:
-            return current
-        else:
-            selection.x = selection.x - 24 * 3
-            selection.y = selection.y + 24
-            current += 1
-            return current
+
 
 RED = (255, 0, 0)
 YELLOW = (255, 150, 0)
@@ -269,6 +275,18 @@ selection = Rect( (52), (5), 24, 24, outline=0xFFAA00, stroke=3)
 mixgrid.append(selection)
 selected = 0
 
+gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=3)
+mixgrid.append(gridbeat)
+
+print("playing")
+
+print (display_note(10))
+
+seq = [10, 20, 30, 40, 50, 60, 70, 80,10, 20, 30, 40, 50, 60, 70, 80]
+sequencer (seq, beat, gridbeat)
+
+print("stopped")
+
 while True:
 
     pixels.fill(OFF)
@@ -289,11 +307,11 @@ while True:
             customwait(.5)
 
         elif (buttons & BUTTON_LEFT) > 0:
-            selected = selection_update('left', selected)
+            selected = selection_update('left', selected, selection)
             print('Left', selected)
 
         elif (buttons & BUTTON_RIGHT) > 0:
-            selected = selection_update('right', selected)
+            selected = selection_update('right', selected, selection)
             print('Right', selected)
 
         elif (buttons & BUTTON_UP) > 0 :
