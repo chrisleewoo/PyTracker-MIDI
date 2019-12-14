@@ -1,12 +1,14 @@
 '''
-CircuitPython DJ
+CircuitPython based PyTracker DJ
 Inspired by LSDJ and nanoloop gameboy trackers
+A modern, open-source handheld music making device 
+
 Code snippets and libraries from the following Adafruit Learning Guides:
     FruitBox Sequencer
     PyBadge GamePad
-    Feather Waveform Generator in CircuitPython
     Circuit Playground Express USB MIDI Controller and Synthesizer
 
+Uses Fluxumasynth MIDI sound generator, but generalized for any MIDI device.
 '''
 
 
@@ -30,7 +32,6 @@ from adafruit_bus_device.i2c_device import I2CDevice
 from gamepadshift import GamePadShift
 from micropython import const
 from analogio import AnalogOut
-from generator import Generator
 import shapes
 import pitches
 from notevals import display_note
