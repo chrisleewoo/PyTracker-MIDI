@@ -1,12 +1,8 @@
 This is a portable music tracker built for CircuitPython devices, specifically the Adafruit Pybadge and PyGamer platforms. Heavily inspired by LSDJ and Nanoloop.
 
-The project is still in the very early stages of development and will change when new APIs become available, but so far it looks quite possible.
+Hardware in the foreseeable future consists of the adafruit pybadge(or compatible variants) and the fluxamasynth midi add-on board for sound generation. The fluxamasynth examples are written in cpp, but we can make it work with circuitpython since it takes standard midi protocol. 
 
-Includes the waveform generator files from the Adafruit Learning System, with just minor tweaks.
-
-Unfortunately, I could not get the 4 channels of waves to mix without overloading memory or outputting just a pop. This will be revisited if circuitpython gets a mixer implimented.
-
-For now, I will continue to make this as a midi controller and sequencer, which still proves to be quite fun to mess with! Adafruit has already provided what I need to get started, and the main works. The older one is on here for posterity.
+https://github.com/fluxly/Fluxamasynth
 
 Moving left and right are working, keeps you on the grid for easier navigation.
 
@@ -15,9 +11,9 @@ Sequence displays as stepped according to BPM.
 Milestones:
 TO DO
 
-[] Match displayed sequence with midi note vals
+[] Connect fluxashield and provide pictures for it
 
-[] wave mixing (ON HOLD)
+[] Match displayed sequence with midi note vals
 
 [] move cursor, menu navigation 
 
@@ -26,4 +22,5 @@ TO DO
 [] envelope (ADSR)
 
 [] save/load songs (read and write to file)
+
 
