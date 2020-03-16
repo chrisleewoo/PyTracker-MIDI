@@ -1,14 +1,12 @@
 '''
-CircuitPython based PyTracker DJ
+CircuitPython DJ
 Inspired by LSDJ and nanoloop gameboy trackers
-A modern, open-source handheld music making device 
-
 Code snippets and libraries from the following Adafruit Learning Guides:
     FruitBox Sequencer
     PyBadge GamePad
+    Feather Waveform Generator in CircuitPython
     Circuit Playground Express USB MIDI Controller and Synthesizer
 
-Uses Fluxumasynth MIDI sound generator, but generalized for any MIDI device.
 '''
 
 
@@ -32,6 +30,7 @@ from adafruit_bus_device.i2c_device import I2CDevice
 from gamepadshift import GamePadShift
 from micropython import const
 from analogio import AnalogOut
+from generator import Generator
 import shapes
 import pitches
 from notevals import display_note
@@ -48,6 +47,7 @@ from adafruit_midi.pitch_bend       import PitchBend
 from adafruit_midi.note_on          import NoteOn
 from adafruit_midi.control_change   import ControlChange
 from adafruit_midi.pitch_bend       import PitchBend
+
 
 midi_note_C4 = 60
 midi_cc_modwheel = 1  # was const(1)
@@ -86,6 +86,9 @@ midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1],
                           out_channel=midi_channel-1)
 
 
+
+
+
 bpm = 60  # quarter note beats per minute
 beat = 15 / bpm  # 16th note expressed as seconds, each beat is this long
 
@@ -97,15 +100,19 @@ def customwait(wait_time):
         while time.monotonic() < (start + wait_time):
             pass
 
-def sequencer(seq, beat, gridbeat):
-    beatstep = 0
+def sequencer(seq, beat, gridbeat, x):
+    # I have a feeling that each step needs to be iterated indiviually in the running loop
+    beatstep = x
     #gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=3)
 
-    for x in range (16):
-        beatstep = selection_update('right',beatstep, gridbeat)
+    beatstep = selection_update('right',beatstep, gridbeat)
+    if seq[x] == 0:
+        customwait(beat)
+    else:
         midi.send(NoteOn(seq[x], 127))
         customwait(beat)
         midi.send(NoteOn(seq[x], 0))
+    
 
 def selection_update(dir,current, type):
     if dir == 'left':
@@ -126,6 +133,33 @@ def selection_update(dir,current, type):
             current += 1
             return current
         elif current == 15:
+            type.x = 52
+            type.y = 5
+            current = 0
+            return current
+        else:
+            type.x = type.x - 24 * 3
+            type.y = type.y + 24
+            current += 1
+            return current
+    if dir == 'up':
+        if current > 3 :     #3, 7, 11, 15
+            type.y = type.y - 24
+            current -= 4
+            return current
+        elif current < 4:
+            return current
+        else:
+            type.x = type.x - 24 * 3
+            type.y = type.y + 24
+            current += 1
+            return current
+    if dir == 'down':
+        if current < 12:     #3, 7, 11, 15
+            type.y = type.y + 24
+            current += 4
+            return current
+        elif current > 11:
             return current
         else:
             type.x = type.x - 24 * 3
@@ -133,9 +167,12 @@ def selection_update(dir,current, type):
             current += 1
             return current
 
+    
+
+
 
 speaker_enable.value = False
-
+# We are going to send midi to another board or out over usb in this project
 
 display = board.DISPLAY
 
@@ -161,8 +198,8 @@ display.show(splash)
 # Make a background color fill
 color_bitmap = displayio.Bitmap(160, 128, 1)
 color_palette = displayio.Palette(1)
-color_palette[0] = 0x000000
-bg_sprite = displayio.TileGrid(color_bitmap, x=0, y=0,
+#color_palette[0] = 0x000000
+bg_sprite = displayio.TileGrid(color_bitmap, x=20, y=20,
                                pixel_shader=color_palette)
 splash.append(bg_sprite)
 ##########################################################################
@@ -175,13 +212,24 @@ splash.append(text_area)
 # insert play startup sound here ######
 customwait(1)
 
-mixgrid = displayio.Group(max_size=40)
+mixgrid = displayio.Group(max_size=64)
+    
+
+for m in range(64):
+    blankness = label.Label(font, text="   ", color=0xff9Fff)
+    mixgrid.append(blankness)
+
+screen_rects = -1
 
 for g in range(4):
         for h in range(4):
+            screen_rects += 1
             gridsq = Rect( (52+24*g), (5+24*h), 24, 24, fill=0x0, outline=0xAFAFFF, stroke=2)
-            mixgrid.append(gridsq)
+            mixgrid.pop(screen_rects)
+            mixgrid.insert( (screen_rects) , gridsq)
 
+
+# mixgrid values 0 to 15
 display.show(mixgrid)
 
 
@@ -223,20 +271,39 @@ def rainbow_cycle(wait):
         customwait(wait)
 
 
+
+
+
+
+
+
 def set_grid_disp(note,spot):
     #be aware of overwriting a current note
+    # this changes the text in the box
     # clear the screen starting at (54,7) with size 20
 
-    mixgrid.pop(spot+15)
+    mixgrid.pop(spot+16)
     thing = label.Label(font, text=note, color=0xff9Fff)
     thing.x = pixelocate_x(spot)
     thing.y = pixelocate_y(spot)
     #insert(index, layer)
-    mixgrid.insert(spot+15, thing)
+    mixgrid.insert(spot+16, thing)
+
+def set_note_playing(note,spot):
+    # eventually I want it to display the note name, not just the midi note number
+    # mixgrid 34 
+    
+    mixgrid.pop(34)
+    noteval = label.Label(font, text=display_note(note), color=0xff9Fff)  #initialize text in each box
+    noteval.x = 5
+    noteval.y = 112
+    mixgrid.insert(34, noteval)
+    #mixgrid.insert(32, noteval)
+
+
 
 def pixelocate_x(number):
     return 55 + 24 * ( number % 4 )
-
 
 def pixelocate_y(number):
     if number < 4:
@@ -257,41 +324,77 @@ CYAN = (0, 255, 255)
 BLUE = (0, 0, 255)
 PURPLE = (180, 0, 255)
 OFF = (0,0,0)
+PLAY = (0,10,0)
 current_buttons = pad.get_pressed()
 last_read = 0
 
-for g in range(15):
+for g in range(16):
     g0 = label.Label(font, text="   ", color=0xff9Fff)  #initialize text in each box
-    mixgrid.append(g0)
+    mixgrid.pop(g+16)
+    mixgrid.insert(g+16,g0)
+    # mixgrid values 16 to 31
 
-set_grid_disp('c#4',14)
-time.sleep(.5)
-set_grid_disp('   ',14)
-time.sleep(.5)
-set_grid_disp('a 7',14)
-time.sleep(.1)
-set_grid_disp('c 5',14)
+#set_grid_disp('c#4',14)
+#time.sleep(.5)
+#set_grid_disp('   ',14)
+#time.sleep(.5)
+#set_grid_disp('a 7',14)
+#time.sleep(.1)
+#set_grid_disp('c 5',14)
 
 selection = Rect( (52), (5), 24, 24, outline=0xFFAA00, stroke=3)
-mixgrid.append(selection)
+mixgrid.pop(32)
+mixgrid.insert(32,selection)
 selected = 0
+# mixgrid 32
 
-gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=3)
-mixgrid.append(gridbeat)
+gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=2)
+mixgrid.pop(33)
+mixgrid.insert(33, gridbeat)
+#mixgrid 33
 
 print("playing")
 
 print (display_note(10))
+x = 0
+seq = [10, 20, 0, 40, 50, 60, 70, 80, 0, 20, 30, 40, 50, 60, 70, 80]
+#sequencer (seq, beat, gridbeat, x)
 
-seq = [10, 20, 30, 40, 50, 60, 70, 80,10, 20, 30, 40, 50, 60, 70, 80]
-sequencer (seq, beat, gridbeat)
+for step in range(16):
+    # we are setting up an initial sequence in this demo program
+    set_grid_disp(display_note(seq[step]), step)
+
+
 
 print("stopped")
+playing = False
+
 
 while True:
 
-    pixels.fill(OFF)
-    pixels.show()
+    #x = 0
+    #y = 0
+    #z = 0
+    #COLOR = (x,y,z)
+    #for v in range (5):
+    #    x = v+1 % 255
+    #    y = v+1 % 255
+    #    z = v+1 % 255
+    #COLOR = (x,y,z)
+    #pixels.fill(OFF)
+    #pixels.show()
+
+    if playing:
+        gridbeat.outline = 0x009900
+        sequencer (seq, beat, gridbeat, x)
+        x = (x+1) % 16
+        pixels.fill(PLAY)
+        pixels.show()
+        set_note_playing((seq[x]),0)
+
+    else:
+        pixels.fill(OFF)
+        pixels.show()
 
             # Reading buttons too fast returns 0
     if (last_read + 0.1) < time.monotonic():
@@ -300,12 +403,12 @@ while True:
     if current_buttons != buttons:
         # Respond to the buttons
         if (buttons == BUTTON_SEL + BUTTON_A): #
-            customwait(.5)
+            customwait(.1)
         elif (buttons == 0b01000100):
-            customwait(.5)
+            customwait(.1)
 
         elif (buttons == 0b10000100):
-            customwait(.5)
+            customwait(.1)
 
         elif (buttons & BUTTON_LEFT) > 0:
             selected = selection_update('left', selected, selection)
@@ -316,14 +419,21 @@ while True:
             print('Right', selected)
 
         elif (buttons & BUTTON_UP) > 0 :
-            print('Up', buttons)
+            selected = selection_update('up', selected, selection)
+            print('Up', selected)
+            #print('Up', buttons)
         elif (buttons & BUTTON_DOWN) > 0 :
-            print('Down', buttons)
+            selected = selection_update('down', selected, selection)
+            print('Down', selected)
         elif (buttons & BUTTON_A) > 0 :
             print('A', buttons)
         elif (buttons & BUTTON_B) > 0 :
             print('B', buttons)
         elif (buttons & BUTTON_START) > 0 :
+            if playing == False:
+                playing = True
+            else:
+                playing = False
             print('Start', buttons)
 
         elif (buttons & BUTTON_SEL) > 0 :
@@ -332,5 +442,3 @@ while True:
 
 
         current_buttons = buttons
-
-
