@@ -5,29 +5,29 @@ def display_note(value):
         return displayed_note
     key = value % 12
     if key == 0:
-        displayed_note = 'c '
+        displayed_note = 'C '
     elif key == 1:
-        displayed_note = 'c#'
+        displayed_note = 'C#'
     elif key == 2:
-        displayed_note = 'd '
+        displayed_note = 'D '
     elif key == 3:
-        displayed_note = 'd#'
+        displayed_note = 'D#'
     elif key == 4:
-        displayed_note = 'e '
+        displayed_note = 'E '
     elif key == 5:
-        displayed_note = 'f '
+        displayed_note = 'F '
     elif key == 6:
-        displayed_note = 'f#'
+        displayed_note = 'F#'
     elif key == 7:
-        displayed_note = 'g '
+        displayed_note = 'G '
     elif key == 8:
-        displayed_note = 'g#'
+        displayed_note = 'G#'
     elif key == 9:
-        displayed_note = 'a '
+        displayed_note = 'A '
     elif key == 10:
-        displayed_note = 'a#'
+        displayed_note = 'A#'
     else:
-        displayed_note = 'b '
+        displayed_note = 'B '
 
     #then take value / key to get the octave number
     displayed_note += str( int(value/12) ) # rounds down, hopefully

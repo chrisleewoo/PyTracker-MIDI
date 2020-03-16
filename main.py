@@ -81,18 +81,17 @@ speaker_enable.direction = digitalio.Direction.OUTPUT
 speaker_enable.value = False
 
 
-midi_channel = 1
 midi = adafruit_midi.MIDI(midi_out=usb_midi.ports[1],
-                          out_channel=midi_channel-1)
+                          out_channel=(0))
 
 
 
 
 
-bpm = 60  # quarter note beats per minute
+bpm = 60 # quarter note beats per minute
 beat = 15 / bpm  # 16th note expressed as seconds, each beat is this long
 
-seq = [] * 16   #16 step sequence
+  #16 step sequence
 
 
 def customwait(wait_time):
@@ -106,64 +105,67 @@ def sequencer(seq, beat, gridbeat, x):
     #gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=3)
 
     beatstep = selection_update('right',beatstep, gridbeat)
-    if seq[x] == 0:
+    if seq[x][0] == 0:
         customwait(beat)
     else:
-        midi.send(NoteOn(seq[x], 127))
+        midi.send(NoteOn(seq[x][0], 127, channel = seq[x][1]))  
+        # setting channel as x is just to prove we can switch channels or instruments for each step
+        # fully supporting this means passing seq[] to sequencer fn includes 
+        # note number, midi channel, and any CC for that step as well
         customwait(beat)
-        midi.send(NoteOn(seq[x], 0))
+        midi.send(NoteOn(seq[x][0], 0))
     
 
 def selection_update(dir,current, type):
     if dir == 'left':
         if current % 4 != 0:     #0, 4, 8, 12
-            type.x = type.x - 24
+            type.x = type.x - 25
             current -= 1
             return current
         elif current == 0:
             return current
         else:
-            type.x = type.x + 24 * 3
-            type.y = type.y - 24
+            type.x = type.x + 25 * 3
+            type.y = type.y - 25
             current -= 1
             return current
     if dir == 'right':
         if current % 4 != 3:     #3, 7, 11, 15
-            type.x = type.x + 24
+            type.x = type.x + 25
             current += 1
             return current
         elif current == 15:
-            type.x = 52
+            type.x = 51
             type.y = 5
             current = 0
             return current
         else:
-            type.x = type.x - 24 * 3
-            type.y = type.y + 24
+            type.x = type.x - 25 * 3
+            type.y = type.y + 25
             current += 1
             return current
     if dir == 'up':
         if current > 3 :     #3, 7, 11, 15
-            type.y = type.y - 24
+            type.y = type.y - 25
             current -= 4
             return current
         elif current < 4:
             return current
         else:
-            type.x = type.x - 24 * 3
-            type.y = type.y + 24
+            type.x = type.x - 25 * 3
+            type.y = type.y + 25
             current += 1
             return current
     if dir == 'down':
         if current < 12:     #3, 7, 11, 15
-            type.y = type.y + 24
+            type.y = type.y + 25
             current += 4
             return current
         elif current > 11:
             return current
         else:
-            type.x = type.x - 24 * 3
-            type.y = type.y + 24
+            type.x = type.x - 25 * 3
+            type.y = type.y + 25
             current += 1
             return current
 
@@ -185,8 +187,8 @@ color = 0x0000FF
 text_area = label.Label(font, text="ChrisLeeWoo", color=0x6F9FAF)
 
 # Set the location
-text_area.x = 23
-text_area.y = 23
+text_area.x = 52
+text_area.y = 52
 
 # Show it
 # display.show(text_area)
@@ -196,26 +198,32 @@ splash = displayio.Group(max_size=10)
 display.show(splash)
 
 # Make a background color fill
-color_bitmap = displayio.Bitmap(160, 128, 1)
-color_palette = displayio.Palette(1)
+#color_bitmap = displayio.Bitmap(160, 128, 1)
+#color_palette = displayio.Palette(2)
 #color_palette[0] = 0x000000
-bg_sprite = displayio.TileGrid(color_bitmap, x=20, y=20,
-                               pixel_shader=color_palette)
-splash.append(bg_sprite)
+#bg_sprite = displayio.TileGrid(color_bitmap, x=50, y=50,
+ #                              pixel_shader=color_palette)
+#splash.append(bg_sprite)
 ##########################################################################
-
+#customwait(2)
 # add my sprite
 
-roundrect = RoundRect(10, 10, 90, 30, 10, fill=0x0, outline=0xAFAF00, stroke=6)
+roundrect = RoundRect(40, 40, 90, 30, 10, fill=0x0, outline=0xAFAF00, stroke=6)
 splash.append(roundrect)
 splash.append(text_area)
 # insert play startup sound here ######
 customwait(1)
 
+# Here are my screens to move through
+song = displayio.Group(max_size=64)
 mixgrid = displayio.Group(max_size=64)
+instrument_screen = displayio.Group(max_size=64)
+settings = displayio.Group(max_size=64)
+
     
 
 for m in range(64):
+    # This initializes my array for the display grid
     blankness = label.Label(font, text="   ", color=0xff9Fff)
     mixgrid.append(blankness)
 
@@ -224,7 +232,7 @@ screen_rects = -1
 for g in range(4):
         for h in range(4):
             screen_rects += 1
-            gridsq = Rect( (52+24*g), (5+24*h), 24, 24, fill=0x0, outline=0xAFAFFF, stroke=2)
+            gridsq = Rect( (51+25*g), (5+25*h), 25, 25, fill=0x0, outline=0x555555, stroke=1)
             mixgrid.pop(screen_rects)
             mixgrid.insert( (screen_rects) , gridsq)
 
@@ -283,36 +291,79 @@ def set_grid_disp(note,spot):
     # clear the screen starting at (54,7) with size 20
 
     mixgrid.pop(spot+16)
-    thing = label.Label(font, text=note, color=0xff9Fff)
-    thing.x = pixelocate_x(spot)
-    thing.y = pixelocate_y(spot)
-    #insert(index, layer)
+    thing = label.Label(font, text=note, color=0xff9F00)
+    thing.x = ( pixelocate_x(spot) )
+    thing.y = ( pixelocate_y(spot) )
+    #mixgrid 16 to 31
     mixgrid.insert(spot+16, thing)
 
-def set_note_playing(note,spot):
-    # eventually I want it to display the note name, not just the midi note number
+def set_note_playing(note):
     # mixgrid 34 
-    
     mixgrid.pop(34)
-    noteval = label.Label(font, text=display_note(note), color=0xff9Fff)  #initialize text in each box
+    noteval = label.Label(font, text=display_note(note), color=0xff9F00)  #initialize text in each box
     noteval.x = 5
-    noteval.y = 112
+    noteval.y = 119
     mixgrid.insert(34, noteval)
-    #mixgrid.insert(32, noteval)
+
+def disp_bpm(bpm):
+    #mixgrid 35
+    mixgrid.pop(35)
+    bpm_val = label.Label(font, text=( "BPM: " + str(bpm) ), color=0x0f9Fff)  #initialize text in each box
+    bpm_val.x = 5
+    bpm_val.y = 59
+    mixgrid.insert(35, bpm_val)
+    
+
+
+
+for g in range(16):
+    g0 = label.Label(font, text="   ", color=0xff9Fff)  #initialize text in each box
+    mixgrid.pop(g+16)
+    mixgrid.insert(g+16,g0)
+    # mixgrid values 16 to 31
+
+
+selection = Rect( (51), (5), 25, 25, outline=0xFFAA00, stroke=3)
+mixgrid.pop(32)
+mixgrid.insert(32,selection)
+selected = 0
+# mixgrid 32
+
+gridbeat = Rect( (51), (5), 25, 25, outline=0xF00000, stroke=3)
+mixgrid.pop(33)
+mixgrid.insert(33, gridbeat)
+#mixgrid 33
+
+
+mixgrid.pop(36)
+screen_label = label.Label(font, text=( "Pattern\n00" ), color=0x0f9Fff)  #initialize text in each box
+screen_label.x = 5
+screen_label.y = 12
+mixgrid.insert(36, screen_label)
+# mixgrid 36
+
+mixgrid.pop(37)
+screen_label = label.Label(font, text=( "INS: " + "0" ), color=0x0f9Fff)  #initialize text in each box
+screen_label.x = 5
+screen_label.y = 42
+mixgrid.insert(37, screen_label)
+# mixgrid 37 as INS number
+
+
 
 
 
 def pixelocate_x(number):
-    return 55 + 24 * ( number % 4 )
+    return 55 + 25 * ( number % 4 )
 
 def pixelocate_y(number):
     if number < 4:
-        return 15
+        return 16
     elif number < 8:
-        return 15 + 24
+        return 16 + 25
     elif number < 12:
-        return 15 + 24*2
-    else: return 15 + 24*3
+        return 16 + 25*2
+    else: return 16 + 25*3
 
 
 
@@ -328,46 +379,43 @@ PLAY = (0,10,0)
 current_buttons = pad.get_pressed()
 last_read = 0
 
-for g in range(16):
-    g0 = label.Label(font, text="   ", color=0xff9Fff)  #initialize text in each box
-    mixgrid.pop(g+16)
-    mixgrid.insert(g+16,g0)
-    # mixgrid values 16 to 31
 
-#set_grid_disp('c#4',14)
-#time.sleep(.5)
-#set_grid_disp('   ',14)
-#time.sleep(.5)
-#set_grid_disp('a 7',14)
-#time.sleep(.1)
-#set_grid_disp('c 5',14)
-
-selection = Rect( (52), (5), 24, 24, outline=0xFFAA00, stroke=3)
-mixgrid.pop(32)
-mixgrid.insert(32,selection)
-selected = 0
-# mixgrid 32
-
-gridbeat = Rect( (52), (5), 24, 24, outline=0xF00000, stroke=2)
-mixgrid.pop(33)
-mixgrid.insert(33, gridbeat)
-#mixgrid 33
 
 print("playing")
 
 print (display_note(10))
 x = 0
-seq = [10, 20, 0, 40, 50, 60, 70, 80, 0, 20, 30, 40, 50, 60, 70, 80]
-#sequencer (seq, beat, gridbeat, x)
+seq =   [[10,0,0], [20,0,0], [0,0,0], [40,0,0], 
+        [50,0,0], [60,0,0], [70,0,0], [80,0,0], 
+        [0,0,0], [20,0,0], [30,0,0], [40,0,0], 
+        [50,0,0], [60,0,0], [70,0,0], [80,0,0]]
+# seq array is [note (0-127), channel(0-15), CC ( 0xffff )  ]
+# CC value is where first nybble (ff) is message, second nyble is value 
+# I may or may not need more values to pass, but this was a good start
 
 for step in range(16):
     # we are setting up an initial sequence in this demo program
-    set_grid_disp(display_note(seq[step]), step)
+    set_grid_disp(display_note(seq[step][0]), step)
 
-
+disp_bpm(bpm)
 
 print("stopped")
 playing = False
+
+screen = 0 # I will need to create more display screens, probably best to put in separate .py files
+
+def show_screen(screen_number):
+    if screen_number == 0:    
+        # the main song screen, it should eventually show a pattern number in the grid
+        display.show(song)
+    elif screen_number == 1:
+        display.show(mixgrid)
+    elif screen_number == 2:
+        display.show(instrument_screen)
+    elif screen_number == 3:
+        display.show(settings)
+
+
 
 
 while True:
@@ -390,9 +438,10 @@ while True:
         x = (x+1) % 16
         pixels.fill(PLAY)
         pixels.show()
-        set_note_playing((seq[x]),0)
+        set_note_playing((seq[x][0]))
 
     else:
+        gridbeat.outline = 0xff0000
         pixels.fill(OFF)
         pixels.show()
 
