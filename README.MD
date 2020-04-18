@@ -30,4 +30,13 @@ Not tested for PyGamer or EdgeBadge, I only have the OG PyBadge.
 -  [ ] envelope (ADSR), pitch bend and other MIDI CC per step
 -  [ ] save/load songs (read and write to file)
 
+## Usage
+* START button: starts/stops the sequencer
+* SELECT button: switches screens
+* Arrow buttons: move cursor to select one of the sixteen beats
+* Hold the B button while using arrow buttons: Change note at selected beat.
+  * Up = up one MIDI note
+  * Down = down  one MIDI note
+  * Right: up one octave
+  * Left: down one octave
 
