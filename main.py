@@ -145,6 +145,18 @@ mixgrid = displayio.Group(max_size=64)
 instrument_screen = displayio.Group(max_size=64)
 settings = displayio.Group(max_size=64)
 
+# Song screen
+lbl_song = label.Label(font, text='Song', color=0xff9F00, x=10, y=10)
+song.append(lbl_song)
+
+# Instruments screen
+lbl_instruments = label.Label(font, text='Instruments', color=0xff9F00, x=10, y=10)
+instrument_screen.append(lbl_instruments)
+
+# Settings screen
+lbl_settings = label.Label(font, text='Settings', color=0xff9F00, x=10, y=10)
+settings.append(lbl_settings)
+
     
 
 for m in range(64):
@@ -318,6 +330,13 @@ def pixelocate_y(number):
         return 16 + 25*2
     else: return 16 + 25*3
 
+def change_note(position, amount):
+    note, channel, cc = seq[position]
+    note += amount
+    if note >=0 and note <=127:
+        seq[position][0] = note
+        set_grid_disp(display_note(note),position)
+        print('change_note @',position, 'amount',amount,'note', note)
 
 
 print("playing")
@@ -431,6 +450,19 @@ while True:
                 print ("A + Up", buttons)
         elif (buttons == BUTTON_A + BUTTON_DOWN > 0 ):
             print ("A + Down", buttons)
+            
+        elif (buttons == BUTTON_B + BUTTON_RIGHT > 0 ):
+            print ("B + Right", buttons)
+            change_note(selected,12) # up an octave
+        elif (buttons == BUTTON_B + BUTTON_LEFT > 0 ):
+            print ("B + Left", buttons)
+            change_note(selected,-12) # down an octave
+        elif (buttons == BUTTON_B + BUTTON_UP > 0 ):
+            print ("B + Up", buttons) # up a MIDI note
+            change_note(selected,1)
+        elif (buttons == BUTTON_B + BUTTON_DOWN > 0 ):
+            print ("B + Down", buttons) # down a MIDI note
+            change_note(selected,-1)
 
         elif (buttons & BUTTON_LEFT) > 0:
             selected = selection_update('left', selected, selection)
@@ -459,6 +491,10 @@ while True:
             print('Start', buttons)
         elif (buttons & BUTTON_SEL) > 0 :
             print('Select', buttons)
+            screen += 1
+            if screen >3:
+                screen = 0
+            show_screen(screen)
 
 
 
