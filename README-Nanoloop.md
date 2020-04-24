@@ -1,4 +1,4 @@
-# PyTracker
+# NanoLoop PyTracker
 
 https://github.com/chrisleewoo/PyTracker-MIDI
 
