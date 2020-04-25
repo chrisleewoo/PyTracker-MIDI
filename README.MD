@@ -20,8 +20,8 @@ Not tested for PyGamer or EdgeBadge, I only have the OG PyBadge.
 ## Features Checklist:
 
  - [ ] Connect Groboards giantboard to recieve midi (USB? UART? SPI? RX/TX pins?)
- - [ ] Test MIDI output on multiple channels
- - [ ] menu navigation, change values in pattern arrays
+ - [x] Test MIDI output on multiple channels
+ - [x] menu navigation, change values in pattern arrays
  - [ ] impliment pages as displayio groups
    - [ ] song page
    - [x] pattern page
